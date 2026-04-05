@@ -17,10 +17,10 @@ const tools: Tool[] = [
 		available: true,
 	},
 	{
-		name: "Coming Soon",
-		description: "More tools will be added here",
-		url: "#",
-		available: false,
+		name: "TCD Analyzer",
+		description: "Thermal conductivity detector analysis tool",
+		url: "https://tcd-analysis.danielcepatterson.workers.dev",
+		available: true,
 	},
 	{
 		name: "Coming Soon",
