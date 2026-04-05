@@ -1,65 +1,65 @@
 // src/App.tsx
 
-import { useState } from "react";
-import reactLogo from "./assets/react.svg";
-import viteLogo from "/vite.svg";
-import cloudflareLogo from "./assets/Cloudflare_Logo.svg";
-import honoLogo from "./assets/hono.svg";
 import "./App.css";
 
-function App() {
-	const [count, setCount] = useState(0);
-	const [name, setName] = useState("unknown");
+interface Tool {
+	name: string;
+	description: string;
+	url: string;
+	available: boolean;
+}
 
+const tools: Tool[] = [
+	{
+		name: "Auto Scheduler",
+		description: "Automated scheduling assistant for managing your calendar",
+		url: "https://auto-scheduler.danielcepatterson.workers.dev",
+		available: true,
+	},
+	{
+		name: "Coming Soon",
+		description: "More tools will be added here",
+		url: "#",
+		available: false,
+	},
+	{
+		name: "Coming Soon",
+		description: "More tools will be added here",
+		url: "#",
+		available: false,
+	},
+];
+
+function App() {
 	return (
-		<>
-			<div>
-				<a href="https://vite.dev" target="_blank">
-					<img src={viteLogo} className="logo" alt="Vite logo" />
-				</a>
-				<a href="https://react.dev" target="_blank">
-					<img src={reactLogo} className="logo react" alt="React logo" />
-				</a>
-				<a href="https://hono.dev/" target="_blank">
-					<img src={honoLogo} className="logo cloudflare" alt="Hono logo" />
-				</a>
-				<a href="https://workers.cloudflare.com/" target="_blank">
-					<img
-						src={cloudflareLogo}
-						className="logo cloudflare"
-						alt="Cloudflare logo"
-					/>
-				</a>
-			</div>
-			<h1>Vite + React + Hono + Cloudflare</h1>
-			<div className="card">
-				<button
-					onClick={() => setCount((count) => count + 1)}
-					aria-label="increment"
-				>
-					count is {count}
-				</button>
-				<p>
-					Edit <code>src/App.tsx</code> and save to test HMR
-				</p>
-			</div>
-			<div className="card">
-				<button
-					onClick={() => {
-						fetch("/api/")
-							.then((res) => res.json() as Promise<{ name: string }>)
-							.then((data) => setName(data.name));
-					}}
-					aria-label="get name"
-				>
-					Name from API is: {name}
-				</button>
-				<p>
-					Edit <code>worker/index.ts</code> to change the name
-				</p>
-			</div>
-			<p className="read-the-docs">Click on the logos to learn more</p>
-		</>
+		<div className="menu-container">
+			<header className="menu-header">
+				<h1>🛠️ Assistant Tools</h1>
+				<p className="subtitle">Your collection of productivity tools</p>
+			</header>
+
+			<nav className="tools-list">
+				{tools.map((tool, index) => (
+					<a
+						key={index}
+						href={tool.available ? tool.url : undefined}
+						className={`tool-card ${!tool.available ? "disabled" : ""}`}
+						target={tool.available ? "_blank" : undefined}
+						rel="noopener noreferrer"
+					>
+						<div className="tool-content">
+							<h2 className="tool-name">{tool.name}</h2>
+							<p className="tool-description">{tool.description}</p>
+						</div>
+						<span className="tool-arrow">{tool.available ? "→" : "🔒"}</span>
+					</a>
+				))}
+			</nav>
+
+			<footer className="menu-footer">
+				<p>Powered by Cloudflare Workers</p>
+			</footer>
+		</div>
 	);
 }
 
