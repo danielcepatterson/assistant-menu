@@ -18,7 +18,7 @@ const tools: Tool[] = [
 	},
 	{
 		name: "TCD Analyzer",
-		description: "Thermal conductivity detector analysis tool",
+		description: "Trouble condition details report analysis",
 		url: "https://tcd-analysis.danielcepatterson.workers.dev",
 		available: true,
 	},
