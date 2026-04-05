@@ -23,10 +23,10 @@ const tools: Tool[] = [
 		available: true,
 	},
 	{
-		name: "Coming Soon",
-		description: "More tools will be added here",
-		url: "#",
-		available: false,
+		name: "Maintenance Reporter 2",
+		description: "Maintenance reporting and tracking tool",
+		url: "https://maintenance-reporter2.danielcepatterson.workers.dev",
+		available: true,
 	},
 ];
 
