@@ -123,6 +123,58 @@ function pickString(row: Record<string, unknown>, keys: string[]) {
 
 async function parseReport(file: File): Promise<GenericRow[]> {
 	const buffer = await file.arrayBuffer();
+	
+	// Check if it's HTML (common for .xls exports that are actually HTML)
+	const decoder = new TextDecoder();
+	const text = decoder.decode(buffer.slice(0, 1000));
+	
+	if (text.includes('<html') || text.includes('<table')) {
+		// Parse as HTML table
+		const fullText = decoder.decode(buffer);
+		const parser = new DOMParser();
+		const doc = parser.parseFromString(fullText, 'text/html');
+		const tables = doc.querySelectorAll('table');
+		
+		if (tables.length === 0) return [];
+		
+		// Find table with most rows (skip header tables)
+		let bestTable = tables[0];
+		let maxRows = 0;
+		tables.forEach(table => {
+			const rows = table.querySelectorAll('tbody tr');
+			if (rows.length > maxRows) {
+				maxRows = rows.length;
+				bestTable = table;
+			}
+		});
+		
+		const headerRow = bestTable.querySelector('thead tr');
+		if (!headerRow) return [];
+		
+		const headers: string[] = [];
+		headerRow.querySelectorAll('th').forEach(th => {
+			headers.push(th.textContent?.trim() || '');
+		});
+		
+		const result: GenericRow[] = [];
+		const bodyRows = bestTable.querySelectorAll('tbody tr');
+		bodyRows.forEach(tr => {
+			const cells = tr.querySelectorAll('td');
+			if (cells.length === 0) return;
+			
+			const row: GenericRow = {};
+			cells.forEach((td, i) => {
+				if (headers[i]) {
+					row[headers[i]] = td.textContent?.trim() || '';
+				}
+			});
+			result.push(row);
+		});
+		
+		return result;
+	}
+	
+	// Otherwise parse as Excel
 	const workbook = XLSX.read(buffer, { type: "array", cellDates: true });
 	const firstSheetName = workbook.SheetNames[0];
 	if (!firstSheetName) return [];
@@ -243,10 +295,11 @@ interface DropZoneProps {
 	title: string;
 	helpText: string;
 	fileName: string;
+	rowCount: number;
 	onFileSelected: (file: File) => void;
 }
 
-function DropZone({ title, helpText, fileName, onFileSelected }: DropZoneProps) {
+function DropZone({ title, helpText, fileName, rowCount, onFileSelected }: DropZoneProps) {
 	const [isDragging, setIsDragging] = useState(false);
 
 	return (
@@ -278,11 +331,12 @@ function DropZone({ title, helpText, fileName, onFileSelected }: DropZoneProps) 
 				/>
 			</label>
 			<div className="file-name">{fileName || "No file selected"}</div>
+			{rowCount > 0 ? (
+				<div className="row-count">✓ {rowCount} rows parsed</div>
+			) : null}
 		</div>
 	);
 }
-
-function App() {
 	const [view, setView] = useState<"menu" | "vacancyAnalyzer">("menu");
 	const [vacancyFileName, setVacancyFileName] = useState("");
 	const [workOrderFileName, setWorkOrderFileName] = useState("");
@@ -304,9 +358,12 @@ function App() {
 		setShowResults(false);
 		try {
 			const parsed = await parseReport(file);
+			console.log("Vacancy file parsed:", parsed.length, "rows");
+			console.log("First row:", parsed[0]);
 			setVacancyRows(parsed);
 			setVacancyFileName(file.name);
-		} catch {
+		} catch (err) {
+			console.error("Error parsing vacancy file:", err);
 			setError("Could not read vacancy report. Please use CSV/XLS/XLSX.");
 		}
 	};
@@ -316,9 +373,12 @@ function App() {
 		setShowResults(false);
 		try {
 			const parsed = await parseReport(file);
+			console.log("Work order file parsed:", parsed.length, "rows");
+			console.log("First row:", parsed[0]);
 			setWorkOrderRows(parsed);
 			setWorkOrderFileName(file.name);
-		} catch {
+		} catch (err) {
+			console.error("Error parsing work order file:", err);
 			setError("Could not read work order report. Please use CSV/XLS/XLSX.");
 		}
 	};
@@ -341,12 +401,14 @@ function App() {
 						title="Vacancy Report"
 						helpText="Drop CSV/XLS/XLSX here"
 						fileName={vacancyFileName}
+						rowCount={vacancyRows.length}
 						onFileSelected={handleVacancyFile}
 					/>
 					<DropZone
 						title="Active Work Order Report"
 						helpText="Drop CSV/XLS/XLSX here"
 						fileName={workOrderFileName}
+						rowCount={workOrderRows.length}
 						onFileSelected={handleWorkOrderFile}
 					/>
 				</section>

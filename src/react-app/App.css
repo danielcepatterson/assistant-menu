@@ -161,6 +161,13 @@
 	word-break: break-all;
 }
 
+.row-count {
+	margin-top: 0.5rem;
+	font-size: 0.85rem;
+	color: #4ade80;
+	font-weight: 600;
+}
+
 .error-text {
 	margin: 0.25rem 0 1rem;
 	color: #ff8a80;
