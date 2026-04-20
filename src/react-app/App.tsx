@@ -417,11 +417,13 @@ function App() {
 
 				{error ? <p className="error-text">{error}</p> : null}
 
-				<div className="action-row">
+				<div className="action-row" style={{ border: "2px solid red", padding: "20px" }}>
+					<p style={{ color: "yellow" }}>DEBUG: Button section - vacancyRows: {vacancyRows.length}, workOrderRows: {workOrderRows.length}, canRun: {String(canRunAnalysis)}</p>
 					<button
 						className="analyze-button"
 						onClick={() => setShowResults(true)}
 						disabled={!canRunAnalysis}
+						style={{ minWidth: "200px", minHeight: "50px" }}
 					>
 						{canRunAnalysis ? "Run Analysis" : "Upload both reports to continue"}
 					</button>
