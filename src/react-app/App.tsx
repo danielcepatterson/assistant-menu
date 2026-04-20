@@ -337,6 +337,8 @@ function DropZone({ title, helpText, fileName, rowCount, onFileSelected }: DropZ
 		</div>
 	);
 }
+
+function App() {
 	const [view, setView] = useState<"menu" | "vacancyAnalyzer">("menu");
 	const [vacancyFileName, setVacancyFileName] = useState("");
 	const [workOrderFileName, setWorkOrderFileName] = useState("");
