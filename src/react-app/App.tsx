@@ -289,16 +289,19 @@ function App() {
 	const [vacancyRows, setVacancyRows] = useState<GenericRow[]>([]);
 	const [workOrderRows, setWorkOrderRows] = useState<GenericRow[]>([]);
 	const [error, setError] = useState("");
+	const [showResults, setShowResults] = useState(false);
 
 	const analysis = useMemo(() => {
-		if (!vacancyRows.length || !workOrderRows.length) return null;
+		if (!vacancyRows.length || !workOrderRows.length || !showResults) return null;
 		return buildCrossReference(vacancyRows, workOrderRows);
-	}, [vacancyRows, workOrderRows]);
+	}, [vacancyRows, workOrderRows, showResults]);
 
 	const rowsWithoutMatch = analysis?.resultRows.filter((row) => row.matchCount === 0).length ?? 0;
+	const canRunAnalysis = vacancyRows.length > 0 && workOrderRows.length > 0;
 
 	const handleVacancyFile = async (file: File) => {
 		setError("");
+		setShowResults(false);
 		try {
 			const parsed = await parseReport(file);
 			setVacancyRows(parsed);
@@ -310,6 +313,7 @@ function App() {
 
 	const handleWorkOrderFile = async (file: File) => {
 		setError("");
+		setShowResults(false);
 		try {
 			const parsed = await parseReport(file);
 			setWorkOrderRows(parsed);
@@ -348,6 +352,19 @@ function App() {
 				</section>
 
 				{error ? <p className="error-text">{error}</p> : null}
+
+				<div className="action-row">
+					<button
+						className="analyze-button"
+						onClick={() => setShowResults(true)}
+						disabled={!canRunAnalysis}
+					>
+						{canRunAnalysis ? "Run Analysis" : "Upload both reports to continue"}
+					</button>
+					{canRunAnalysis && !showResults ? (
+						<p className="ready-text">✓ Ready to analyze</p>
+					) : null}
+				</div>
 
 				{analysis ? (
 					<section className="results-panel">
@@ -395,9 +412,7 @@ function App() {
 							</table>
 						</div>
 					</section>
-				) : (
-					<p className="hint-text">Upload both reports to run analysis.</p>
-				)}
+				) : null}
 			</div>
 		);
 	}

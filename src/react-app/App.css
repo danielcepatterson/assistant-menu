@@ -166,6 +166,42 @@
 	color: #ff8a80;
 }
 
+.action-row {
+	display: flex;
+	align-items: center;
+	gap: 1rem;
+	margin: 1.25rem 0;
+	justify-content: center;
+}
+
+.analyze-button {
+	padding: 0.75rem 1.75rem;
+	font-size: 1rem;
+	font-weight: 600;
+	background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+	border: none;
+	border-radius: 10px;
+	cursor: pointer;
+	transition: all 0.2s ease;
+}
+
+.analyze-button:hover:not(:disabled) {
+	transform: translateY(-2px);
+	box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.analyze-button:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+	background: rgba(255, 255, 255, 0.1);
+}
+
+.ready-text {
+	margin: 0;
+	color: #4ade80;
+	font-size: 0.9rem;
+}
+
 .hint-text {
 	color: #9b9b9b;
 	text-align: center;
