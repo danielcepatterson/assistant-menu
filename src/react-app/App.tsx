@@ -284,6 +284,10 @@ function buildCrossReference(vacancyRows: GenericRow[], workOrderRows: GenericRo
 		};
 	});
 
+	console.log("Parsed vacancies:", parsedVacancies);
+	console.log("Parsed work orders:", parsedWorkOrders);
+	console.log("Result rows:", resultRows);
+
 	return {
 		resultRows,
 		vacancyCount: parsedVacancies.length,
@@ -417,13 +421,11 @@ function App() {
 
 				{error ? <p className="error-text">{error}</p> : null}
 
-				<div className="action-row" style={{ border: "2px solid red", padding: "20px" }}>
-					<p style={{ color: "yellow" }}>DEBUG: Button section - vacancyRows: {vacancyRows.length}, workOrderRows: {workOrderRows.length}, canRun: {String(canRunAnalysis)}</p>
+				<div className="action-row">
 					<button
 						className="analyze-button"
 						onClick={() => setShowResults(true)}
 						disabled={!canRunAnalysis}
-						style={{ minWidth: "200px", minHeight: "50px" }}
 					>
 						{canRunAnalysis ? "Run Analysis" : "Upload both reports to continue"}
 					</button>
@@ -454,12 +456,8 @@ function App() {
 								<thead>
 									<tr>
 										<th>Unit Name</th>
-										<th>Work Window Start</th>
-										<th>Work Window End</th>
-										<th>Match Count</th>
-										<th>Matched Work Order IDs</th>
-										<th>Matched Statuses</th>
-										<th>Matched Dates</th>
+										<th>Window Start</th>
+										<th>Work Orders</th>
 									</tr>
 								</thead>
 								<tbody>
@@ -467,11 +465,7 @@ function App() {
 										<tr key={`${row.unitName}-${index}`}>
 											<td>{row.unitName}</td>
 											<td>{row.windowStart}</td>
-											<td>{row.windowEnd}</td>
-											<td>{row.matchCount}</td>
 											<td>{row.matchedOrders}</td>
-											<td>{row.matchedStatuses}</td>
-											<td>{row.matchedDates}</td>
 										</tr>
 									))}
 								</tbody>
