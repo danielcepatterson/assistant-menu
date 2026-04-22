@@ -201,6 +201,11 @@ function buildCrossReference(vacancyRows: GenericRow[], workOrderRows: GenericRo
 	const normalizedVacancy = normalizeRows(vacancyRows);
 	const normalizedWorkOrders = normalizeRows(workOrderRows);
 
+	console.log("Raw vacancy rows:", vacancyRows.slice(0, 3));
+	console.log("Normalized vacancy:", normalizedVacancy.slice(0, 3));
+	console.log("Raw work order rows:", workOrderRows.slice(0, 3));
+	console.log("Normalized work orders:", normalizedWorkOrders.slice(0, 3));
+
 	const parsedVacancies: ParsedVacancy[] = normalizedVacancy
 		.map((row) => {
 			const unitName = pickString(row, ["unitname", "unit", "property", "propertyname"]);
@@ -209,6 +214,8 @@ function buildCrossReference(vacancyRows: GenericRow[], workOrderRows: GenericRo
 
 			const windowStart = parseDateValue(startRaw);
 			const windowEnd = parseDateValue(endRaw);
+
+			console.log("Vacancy parsing:", { unitName, startRaw, endRaw, windowStart, windowEnd });
 
 			if (!unitName || !windowStart || !windowEnd) return null;
 
@@ -238,7 +245,11 @@ function buildCrossReference(vacancyRows: GenericRow[], workOrderRows: GenericRo
 				"(no id)";
 
 			const status = pickString(row, ["status", "workorderstatus", "wostatus"]);
-			if (!isPossiblyActiveStatus(status)) return null;
+			
+			console.log("Work order parsing:", { unitName, orderId, status, rawRow: row });
+			
+			// Don't filter by status for now - let's see all work orders
+			// if (!isPossiblyActiveStatus(status)) return null;
 
 			const dateRaw = pickFirst(row, [
 				"workorderdate",
@@ -261,17 +272,33 @@ function buildCrossReference(vacancyRows: GenericRow[], workOrderRows: GenericRo
 
 	const resultRows: CrossRefRow[] = parsedVacancies.map((vacancy) => {
 		const unitKey = normalizeUnit(vacancy.unitName);
+		console.log("Looking for matches for unit:", vacancy.unitName, "normalized:", unitKey);
+		
 		const matches = parsedWorkOrders.filter((workOrder) => {
-			if (normalizeUnit(workOrder.unitName) !== unitKey) return false;
+			const workOrderKey = normalizeUnit(workOrder.unitName);
+			const unitMatch = workOrderKey === unitKey;
+			
+			console.log("  Comparing with:", workOrder.unitName, "normalized:", workOrderKey, "match:", unitMatch);
 
-			if (!workOrder.date) return true;
+			if (!unitMatch) return false;
+
+			// If no date, include it
+			if (!workOrder.date) {
+				console.log("    -> Including (no date)");
+				return true;
+			}
 
 			const orderTime = workOrder.date.getTime();
-			return (
+			const inWindow = (
 				orderTime >= vacancy.windowStart.getTime() &&
 				orderTime <= vacancy.windowEnd.getTime()
 			);
+			
+			console.log("    -> Date check:", workOrder.dateText, "in window:", inWindow);
+			return inWindow;
 		});
+
+		console.log("  Found", matches.length, "matches for", vacancy.unitName);
 
 		return {
 			unitName: vacancy.unitName,
