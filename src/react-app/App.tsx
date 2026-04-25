@@ -529,6 +529,7 @@ function App() {
 									<tr>
 										<th>Unit Name</th>
 										<th>Window Start</th>
+										<th>Window End</th>
 										<th>Work Orders</th>
 									</tr>
 								</thead>
@@ -537,6 +538,7 @@ function App() {
 										<tr key={`${row.unitName}-${index}`}>
 											<td>{row.unitName}</td>
 											<td>{row.windowStart}</td>
+											<td>{row.windowEnd}</td>
 											<td>{row.matchedOrders}</td>
 										</tr>
 									))}
