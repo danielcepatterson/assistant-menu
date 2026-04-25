@@ -14,6 +14,7 @@ interface ParsedVacancy {
 	windowEnd: Date;
 	startText: string;
 	endText: string;
+	vacantDays: number;
 }
 
 interface ParsedWorkOrder {
@@ -28,6 +29,7 @@ interface CrossRefRow {
 	unitName: string;
 	windowStart: string;
 	windowEnd: string;
+	vacantDays: number;
 	matchCount: number;
 	matchedOrders: string;
 	matchedStatuses: string;
@@ -203,11 +205,13 @@ function buildCrossReference(vacancyRows: GenericRow[], workOrderRows: GenericRo
 			const unitName = pickString(row, ["unitname", "unit", "property", "propertyname"]);
 			const startRaw = pickFirst(row, ["vacancystartdate", "startdate", "vacancystart"]);
 			const endRaw = pickFirst(row, ["vacancyenddate", "enddate", "vacancyend"]);
+			const vacantDaysRaw = pickFirst(row, ["vacantdays", "vacant", "days"]);
 
 			const windowStart = parseDateValue(startRaw);
 			const windowEnd = parseDateValue(endRaw);
+			const vacantDays = vacantDaysRaw ? Number(vacantDaysRaw) : 0;
 
-			console.log("Vacancy parsing:", { unitName, startRaw, endRaw, windowStart, windowEnd });
+			console.log("Vacancy parsing:", { unitName, startRaw, endRaw, windowStart, windowEnd, vacantDays });
 
 			if (!unitName || !windowStart || !windowEnd) return null;
 
@@ -217,6 +221,7 @@ function buildCrossReference(vacancyRows: GenericRow[], workOrderRows: GenericRo
 				windowEnd,
 				startText: formatDate(windowStart),
 				endText: formatDate(windowEnd),
+				vacantDays,
 			};
 		})
 		.filter((item): item is ParsedVacancy => item !== null);
@@ -308,6 +313,7 @@ function buildCrossReference(vacancyRows: GenericRow[], workOrderRows: GenericRo
 			unitName: vacancy.unitName,
 			windowStart: vacancy.startText,
 			windowEnd: vacancy.endText,
+			vacantDays: vacancy.vacantDays,
 			matchCount: matches.length,
 			matchedOrders: matches.map((m) => m.orderId).join(", ") || "None",
 			matchedStatuses: matches.map((m) => m.status).join(", ") || "None",
@@ -383,7 +389,7 @@ function App() {
 	const [workOrderRows, setWorkOrderRows] = useState<GenericRow[]>([]);
 	const [error, setError] = useState("");
 	const [showResults, setShowResults] = useState(false);
-	const [sortBy, setSortBy] = useState<"unitName" | "windowStart">("unitName");
+	const [sortBy, setSortBy] = useState<"unitName" | "windowStart" | "vacantDays">("unitName");
 
 	const analysis = useMemo(() => {
 		if (!vacancyRows.length || !workOrderRows.length || !showResults) return null;
@@ -396,12 +402,14 @@ function App() {
 		
 		if (sortBy === "unitName") {
 			sorted.sort((a, b) => a.unitName.localeCompare(b.unitName));
-		} else {
+		} else if (sortBy === "windowStart") {
 			sorted.sort((a, b) => {
 				const dateA = new Date(a.windowStart);
 				const dateB = new Date(b.windowStart);
 				return dateA.getTime() - dateB.getTime();
 			});
+		} else if (sortBy === "vacantDays") {
+			sorted.sort((a, b) => b.vacantDays - a.vacantDays);
 		}
 		
 		return sorted;
@@ -496,11 +504,12 @@ function App() {
 								<label style={{ fontSize: "0.9rem" }}>Sort by:</label>
 								<select 
 									value={sortBy} 
-									onChange={(e) => setSortBy(e.target.value as "unitName" | "windowStart")}
+									onChange={(e) => setSortBy(e.target.value as "unitName" | "windowStart" | "vacantDays")}
 									style={{ padding: "0.5rem", borderRadius: "6px", background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.2)", color: "inherit", cursor: "pointer" }}
 								>
 									<option value="unitName">Unit Name (A-Z)</option>
 									<option value="windowStart">Window Start Date</option>
+									<option value="vacantDays">Vacant Days (High to Low)</option>
 								</select>
 							</div>
 							<button onClick={handlePrint} className="print-button">
@@ -530,15 +539,17 @@ function App() {
 										<th>Unit Name</th>
 										<th>Window Start</th>
 										<th>Window End</th>
-										<th>Work Orders</th>
-									</tr>
-								</thead>
-								<tbody>
-									{sortedResults.map((row, index) => (
-										<tr key={`${row.unitName}-${index}`}>
-											<td>{row.unitName}</td>
-											<td>{row.windowStart}</td>
-											<td>{row.windowEnd}</td>
+									<th>Vacant Days</th>
+									<th>Work Orders</th>
+								</tr>
+							</thead>
+							<tbody>
+								{sortedResults.map((row, index) => (
+									<tr key={`${row.unitName}-${index}`}>
+										<td>{row.unitName}</td>
+										<td>{row.windowStart}</td>
+										<td>{row.windowEnd}</td>
+										<td>{row.vacantDays}</td>
 											<td>{row.matchedOrders}</td>
 										</tr>
 									))}
