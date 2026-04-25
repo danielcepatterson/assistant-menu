@@ -223,22 +223,31 @@ function buildCrossReference(vacancyRows: GenericRow[], workOrderRows: GenericRo
 
 	const parsedWorkOrders: ParsedWorkOrder[] = normalizedWorkOrders
 		.map((row) => {
+			// Try multiple possible column names for cabin/unit number
 			const unitName = pickString(row, [
+				"cabin",
+				"cabinnumber",
+				"cabin",
 				"unitname",
 				"unit",
 				"property",
 				"propertyname",
 				"rental",
+				"rentalunit",
 			]);
-			if (!unitName) return null;
+			
+			if (!unitName) {
+				console.log("Work order row with no unit name:", row);
+				return null;
+			}
 
 			const orderId =
-				pickString(row, ["workordernumber", "workorder", "wo", "id", "ordernumber"]) ||
+				pickString(row, ["workordernumber", "workorder", "wo", "id", "ordernumber", "number"]) ||
 				"(no id)";
 
 			const status = pickString(row, ["status", "workorderstatus", "wostatus"]);
 			
-			console.log("Work order parsing:", { unitName, orderId, status, rawRow: row });
+			console.log("Work order parsing:", { unitName, orderId, status, allKeys: Object.keys(row) });
 			
 			// Don't filter by status for now - let's see all work orders
 			// if (!isPossiblyActiveStatus(status)) return null;
@@ -249,6 +258,7 @@ function buildCrossReference(vacancyRows: GenericRow[], workOrderRows: GenericRo
 				"opendate",
 				"reporteddate",
 				"date",
+				"created",
 			]);
 			const date = parseDateValue(dateRaw);
 
