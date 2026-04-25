@@ -469,33 +469,6 @@ function App() {
 
 				{analysis ? (
 					<section className="results-panel">
-						<div className="debug-panel" style={{ background: "rgba(255,255,0,0.1)", padding: "1rem", marginBottom: "1rem", borderRadius: "8px" }}>
-							<h3>Debug Info</h3>
-							<div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
-								<div>
-									<h4>First 5 Vacancies Parsed:</h4>
-									{analysis.debugVacancies?.map((v, i) => (
-										<div key={i} style={{ marginBottom: "0.5rem", fontSize: "0.85rem" }}>
-											<strong>{v.unitName}</strong><br/>
-											Window: {v.startText} - {v.endText}<br/>
-											Normalized: "{normalizeUnit(v.unitName)}"
-										</div>
-									))}
-								</div>
-								<div>
-									<h4>First 5 Work Orders Parsed:</h4>
-									{analysis.debugWorkOrders?.map((w, i) => (
-										<div key={i} style={{ marginBottom: "0.5rem", fontSize: "0.85rem" }}>
-											<strong>{w.unitName}</strong><br/>
-											Order: {w.orderId} | Status: {w.status}<br/>
-											Date: {w.dateText}<br/>
-											Normalized: "{normalizeUnit(w.unitName)}"
-										</div>
-									))}
-								</div>
-							</div>
-						</div>
-
 						<div className="summary-grid">
 							<div className="summary-card">
 								<span>Vacancy Windows</span>
