@@ -57,7 +57,8 @@ const externalTools: ExternalTool[] = [
 const normalizeKey = (value: string) =>
 	value.toLowerCase().replace(/[^a-z0-9]/g, "");
 
-const normalizeUnit = (value: string) => value.trim().toLowerCase();
+const normalizeUnit = (value: string) => 
+	value.trim().replace(/\s+/g, ' ').toLowerCase();
 
 const formatDate = (date: Date) =>
 	`${String(date.getMonth() + 1).padStart(2, "0")}/${String(date.getDate()).padStart(2, "0")}/${date.getFullYear()}`;
@@ -269,7 +270,9 @@ function buildCrossReference(vacancyRows: GenericRow[], workOrderRows: GenericRo
 			const workOrderKey = normalizeUnit(workOrder.unitName);
 			const unitMatch = workOrderKey === unitKey;
 			
-			console.log("  Comparing with:", workOrder.unitName, "normalized:", workOrderKey, "match:", unitMatch);
+			if (vacancy.unitName.toLowerCase().includes("shore") || workOrder.unitName.toLowerCase().includes("shore")) {
+				console.log("  SHORE TEST - Comparing:", vacancy.unitName, "("+unitKey+")", "with:", workOrder.unitName, "("+workOrderKey+")", "match:", unitMatch);
+			}
 
 			if (!unitMatch) return false;
 
