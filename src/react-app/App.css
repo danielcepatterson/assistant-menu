@@ -209,6 +209,46 @@
 	font-size: 0.9rem;
 }
 
+.print-button {
+	padding: 0.6rem 1.2rem;
+	background: rgba(255, 255, 255, 0.1);
+	border: 1px solid rgba(255, 255, 255, 0.2);
+	border-radius: 8px;
+	cursor: pointer;
+	transition: all 0.2s ease;
+	font-size: 0.9rem;
+}
+
+.print-button:hover {
+	background: rgba(255, 255, 255, 0.15);
+	border-color: rgba(102, 126, 234, 0.5);
+}
+
+@media print {
+	.menu-header,
+	.back-button,
+	.drop-grid,
+	.action-row,
+	.results-header,
+	.print-button {
+		display: none !important;
+	}
+	
+	.results-panel {
+		border: none !important;
+		background: white !important;
+	}
+	
+	table {
+		color: black !important;
+	}
+	
+	th {
+		background: #f0f0f0 !important;
+		color: black !important;
+	}
+}
+
 .hint-text {
 	color: #9b9b9b;
 	text-align: center;

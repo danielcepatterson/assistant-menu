@@ -383,14 +383,36 @@ function App() {
 	const [workOrderRows, setWorkOrderRows] = useState<GenericRow[]>([]);
 	const [error, setError] = useState("");
 	const [showResults, setShowResults] = useState(false);
+	const [sortBy, setSortBy] = useState<"unitName" | "windowStart">("unitName");
 
 	const analysis = useMemo(() => {
 		if (!vacancyRows.length || !workOrderRows.length || !showResults) return null;
 		return buildCrossReference(vacancyRows, workOrderRows);
 	}, [vacancyRows, workOrderRows, showResults]);
 
+	const sortedResults = useMemo(() => {
+		if (!analysis) return [];
+		const sorted = [...analysis.resultRows];
+		
+		if (sortBy === "unitName") {
+			sorted.sort((a, b) => a.unitName.localeCompare(b.unitName));
+		} else {
+			sorted.sort((a, b) => {
+				const dateA = new Date(a.windowStart);
+				const dateB = new Date(b.windowStart);
+				return dateA.getTime() - dateB.getTime();
+			});
+		}
+		
+		return sorted;
+	}, [analysis, sortBy]);
+
 	const rowsWithoutMatch = analysis?.resultRows.filter((row) => row.matchCount === 0).length ?? 0;
 	const canRunAnalysis = vacancyRows.length > 0 && workOrderRows.length > 0;
+
+	const handlePrint = () => {
+		window.print();
+	};
 
 	const handleVacancyFile = async (file: File) => {
 		setError("");
@@ -469,6 +491,23 @@ function App() {
 
 				{analysis ? (
 					<section className="results-panel">
+						<div className="results-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
+							<div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+								<label style={{ fontSize: "0.9rem" }}>Sort by:</label>
+								<select 
+									value={sortBy} 
+									onChange={(e) => setSortBy(e.target.value as "unitName" | "windowStart")}
+									style={{ padding: "0.5rem", borderRadius: "6px", background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.2)", color: "inherit", cursor: "pointer" }}
+								>
+									<option value="unitName">Unit Name (A-Z)</option>
+									<option value="windowStart">Window Start Date</option>
+								</select>
+							</div>
+							<button onClick={handlePrint} className="print-button">
+								🖨️ Print Results
+							</button>
+						</div>
+
 						<div className="summary-grid">
 							<div className="summary-card">
 								<span>Vacancy Windows</span>
@@ -494,7 +533,7 @@ function App() {
 									</tr>
 								</thead>
 								<tbody>
-									{analysis.resultRows.map((row, index) => (
+									{sortedResults.map((row, index) => (
 										<tr key={`${row.unitName}-${index}`}>
 											<td>{row.unitName}</td>
 											<td>{row.windowStart}</td>
