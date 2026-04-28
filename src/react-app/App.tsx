@@ -681,7 +681,7 @@ function App() {
 								)}
 							</div>
 							<button onClick={handlePrint} className="print-button">
-								🖨️ Print Results
+								🖨️ Print {viewMode === "calendar" ? "Calendar" : "Results"}
 							</button>
 						</div>
 

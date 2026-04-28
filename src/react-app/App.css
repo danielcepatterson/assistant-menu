@@ -333,13 +333,13 @@ tr:nth-child(even) td {
 .calendar-scroll {
 	overflow-x: auto;
 	overflow-y: auto;
-	max-height: 70vh;
+	max-height: 80vh;
 }
 
 .calendar-table {
 	width: 100%;
 	border-collapse: collapse;
-	font-size: 0.85rem;
+	font-size: 0.75rem;
 }
 
 .unit-header {
@@ -348,10 +348,10 @@ tr:nth-child(even) td {
 	z-index: 3;
 	background: rgba(20, 20, 40, 0.98);
 	color: #60a5fa;
-	padding: 12px 16px;
+	padding: 6px 10px;
 	border-right: 2px solid rgba(96, 165, 250, 0.3);
 	border-bottom: 2px solid rgba(96, 165, 250, 0.3);
-	min-width: 200px;
+	min-width: 140px;
 	font-weight: 600;
 }
 
@@ -361,10 +361,10 @@ tr:nth-child(even) td {
 	z-index: 2;
 	background: rgba(20, 20, 40, 0.98);
 	color: #93c5fd;
-	padding: 8px 4px;
+	padding: 4px 2px;
 	border-bottom: 2px solid rgba(96, 165, 250, 0.3);
-	font-size: 0.75rem;
-	min-width: 35px;
+	font-size: 0.65rem;
+	min-width: 28px;
 	white-space: nowrap;
 	text-align: center;
 }
@@ -374,21 +374,22 @@ tr:nth-child(even) td {
 	left: 0;
 	z-index: 1;
 	background: rgba(20, 20, 40, 0.95);
-	padding: 10px 16px;
+	padding: 6px 10px;
 	border-right: 2px solid rgba(96, 165, 250, 0.2);
 	border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 	font-weight: 500;
 	color: #e0e7ff;
-	min-width: 200px;
+	min-width: 140px;
+	font-size: 0.8rem;
 }
 
 .calendar-cell {
-	padding: 4px;
+	padding: 2px;
 	border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 	border-right: 1px solid rgba(255, 255, 255, 0.03);
 	text-align: center;
-	min-width: 35px;
-	height: 40px;
+	min-width: 28px;
+	height: 30px;
 	position: relative;
 	vertical-align: middle;
 }
@@ -417,9 +418,9 @@ tr:nth-child(even) td {
 	display: inline-block;
 	background: rgba(96, 165, 250, 0.9);
 	color: #0c1222;
-	padding: 2px 6px;
-	border-radius: 3px;
-	font-size: 0.7rem;
+	padding: 1px 4px;
+	border-radius: 2px;
+	font-size: 0.6rem;
 	font-weight: 600;
 	white-space: nowrap;
 }
@@ -458,5 +459,56 @@ tr:nth-child(even) td {
 
 	.menu-header h1 {
 		font-size: 1.9rem;
+	}
+}
+
+@media print {
+	.back-button,
+	.analyze-button,
+	.print-button,
+	.view-button,
+	.drop-zone,
+	select,
+	label {
+		display: none !important;
+	}
+
+	.results-panel {
+		box-shadow: none;
+	}
+
+	.results-header {
+		display: none !important;
+	}
+
+	.table-wrap {
+		max-height: none;
+		overflow: visible;
+	}
+
+	.calendar-scroll {
+		max-height: none;
+		overflow: visible;
+	}
+
+	.calendar-table {
+		font-size: 0.65rem;
+	}
+
+	.unit-header,
+	.unit-cell {
+		min-width: 100px;
+		padding: 4px 8px;
+	}
+
+	.date-header,
+	.calendar-cell {
+		min-width: 24px;
+		padding: 2px 1px;
+	}
+
+	.work-order-label {
+		font-size: 0.55rem;
+		padding: 1px 3px;
 	}
 }
