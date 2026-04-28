@@ -513,9 +513,13 @@ function CalendarView({ vacancyRows, workOrderRows }: CalendarViewProps) {
 												className={`calendar-cell ${inWindow ? 'vacant' : ''} ${hasOnlyOneShortWindow && inWindow ? 'alert' : ''}`}
 											>
 												{inWindow && isFirstDayOfEarliest && workOrders.length > 0 ? (
-													<span className="work-order-label">
-														{workOrders.join(", ")}
-													</span>
+												<>
+													{workOrders.map((wo, idx) => (
+														<span key={idx} className="work-order-label">
+															{wo}
+														</span>
+													))}
+												</>
 												) : null}
 											</td>
 										);
