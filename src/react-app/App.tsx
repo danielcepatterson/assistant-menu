@@ -381,6 +381,155 @@ function DropZone({ title, helpText, fileName, rowCount, onFileSelected }: DropZ
 	);
 }
 
+interface CalendarViewProps {
+	vacancyRows: GenericRow[];
+	workOrderRows: GenericRow[];
+}
+
+function CalendarView({ vacancyRows, workOrderRows }: CalendarViewProps) {
+	// Get date range from all vacancy windows
+	const normalizedVacancy = normalizeRows(vacancyRows);
+	
+	const vacanciesByUnit = new Map<string, Array<{ start: Date; end: Date; days: number }>>();
+	const workOrdersByUnit = new Map<string, string[]>();
+	
+	// Parse vacancies
+	normalizedVacancy.forEach((row) => {
+		const unitName = pickString(row, ["unitname", "unit", "property", "propertyname"]);
+		const startRaw = pickFirst(row, ["vacancystartdate", "startdate", "vacancystart"]);
+		const endRaw = pickFirst(row, ["vacancyenddate", "enddate", "vacancyend"]);
+		const daysRaw = pickFirst(row, ["vacantdays", "vacant", "days"]);
+		
+		const start = parseDateValue(startRaw);
+		const end = parseDateValue(endRaw);
+		const days = daysRaw ? Number(daysRaw) : 0;
+		
+		if (!unitName || !start || !end) return;
+		
+		if (!vacanciesByUnit.has(unitName)) {
+			vacanciesByUnit.set(unitName, []);
+		}
+		vacanciesByUnit.get(unitName)!.push({ start, end, days });
+	});
+	
+	// Parse work orders
+	const normalizedWorkOrders = normalizeRows(workOrderRows);
+	normalizedWorkOrders.forEach((row) => {
+		const unitName = pickString(row, [
+			"cabin",
+			"cabinnumber",
+			"unitname",
+			"unit",
+			"property",
+			"propertyname",
+			"rental",
+		]);
+		const orderId = pickString(row, ["workordernumber", "workorder", "wo", "id", "ordernumber"]) || "(no id)";
+		
+		if (!unitName) return;
+		
+		const normalizedUnit = normalizeUnit(unitName);
+		
+		// Find matching unit in vacancies
+		for (const [vacUnit] of vacanciesByUnit.entries()) {
+			if (normalizeUnit(vacUnit) === normalizedUnit) {
+				if (!workOrdersByUnit.has(vacUnit)) {
+					workOrdersByUnit.set(vacUnit, []);
+				}
+				workOrdersByUnit.get(vacUnit)!.push(orderId);
+				break;
+			}
+		}
+	});
+	
+	// Get all dates
+	let minDate: Date | null = null;
+	let maxDate: Date | null = null;
+	
+	for (const windows of vacanciesByUnit.values()) {
+		for (const window of windows) {
+			if (!minDate || window.start < minDate) minDate = window.start;
+			if (!maxDate || window.end > maxDate) maxDate = window.end;
+		}
+	}
+	
+	if (!minDate || !maxDate) {
+		return <p>No vacancy data to display</p>;
+	}
+	
+	// Generate date headers (days)
+	const dateHeaders: Date[] = [];
+	const current = new Date(minDate);
+	while (current <= maxDate) {
+		dateHeaders.push(new Date(current));
+		current.setDate(current.getDate() + 1);
+	}
+	
+	// Sort units alphabetically
+	const sortedUnits = Array.from(vacanciesByUnit.keys()).sort((a, b) => a.localeCompare(b));
+	
+	return (
+		<div className="calendar-container">
+			<div className="calendar-scroll">
+				<table className="calendar-table">
+					<thead>
+						<tr>
+							<th className="unit-header">Unit</th>
+							{dateHeaders.map((date, i) => (
+								<th key={i} className="date-header">
+									<div>{date.getMonth() + 1}/{date.getDate()}</div>
+								</th>
+							))}
+						</tr>
+					</thead>
+					<tbody>
+						{sortedUnits.map((unit) => {
+							const windows = vacanciesByUnit.get(unit)!;
+							const workOrders = workOrdersByUnit.get(unit) || [];
+							const hasOnlyOneShortWindow = windows.length === 1 && windows[0].days < 3;
+							
+							// Find earliest window to place work orders
+							const earliestWindow = windows.reduce((earliest, current) => 
+								current.start < earliest.start ? current : earliest
+							);
+							
+							return (
+								<tr key={unit}>
+									<td className="unit-cell">{unit}</td>
+									{dateHeaders.map((date, i) => {
+										// Check if this date is in any vacancy window
+										const inWindow = windows.find(w => 
+											date >= w.start && date <= w.end
+										);
+										
+										// Check if this is the first day of the earliest window
+										const isFirstDayOfEarliest = 
+											earliestWindow && 
+											date.getTime() === earliestWindow.start.getTime();
+										
+										return (
+											<td 
+												key={i} 
+												className={`calendar-cell ${inWindow ? 'vacant' : ''} ${hasOnlyOneShortWindow && inWindow ? 'alert' : ''}`}
+											>
+												{inWindow && isFirstDayOfEarliest && workOrders.length > 0 ? (
+													<span className="work-order-label">
+														{workOrders.join(", ")}
+													</span>
+												) : null}
+											</td>
+										);
+									})}
+								</tr>
+							);
+						})}
+					</tbody>
+				</table>
+			</div>
+		</div>
+	);
+}
+
 function App() {
 	const [view, setView] = useState<"menu" | "vacancyAnalyzer">("menu");
 	const [vacancyFileName, setVacancyFileName] = useState("");
@@ -390,6 +539,7 @@ function App() {
 	const [error, setError] = useState("");
 	const [showResults, setShowResults] = useState(false);
 	const [sortBy, setSortBy] = useState<"unitName" | "windowStart" | "vacantDays">("unitName");
+	const [viewMode, setViewMode] = useState<"table" | "calendar">("table");
 
 	const analysis = useMemo(() => {
 		if (!vacancyRows.length || !workOrderRows.length || !showResults) return null;
@@ -500,62 +650,89 @@ function App() {
 				{analysis ? (
 					<section className="results-panel">
 						<div className="results-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
-							<div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
-								<label style={{ fontSize: "0.9rem" }}>Sort by:</label>
-								<select 
-									value={sortBy} 
-									onChange={(e) => setSortBy(e.target.value as "unitName" | "windowStart" | "vacantDays")}
-									style={{ padding: "0.5rem", borderRadius: "6px", background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.2)", color: "inherit", cursor: "pointer" }}
-								>
-									<option value="unitName">Unit Name (A-Z)</option>
-									<option value="windowStart">Window Start Date</option>
-									<option value="vacantDays">Vacant Days (High to Low)</option>
-								</select>
+							<div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
+								<div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+									<button
+										onClick={() => setViewMode("table")}
+										className={viewMode === "table" ? "view-button active" : "view-button"}
+									>
+										📊 Table
+									</button>
+									<button
+										onClick={() => setViewMode("calendar")}
+										className={viewMode === "calendar" ? "view-button active" : "view-button"}
+									>
+										📅 Calendar
+									</button>
+								</div>
+								{viewMode === "table" && (
+									<div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+										<label style={{ fontSize: "0.9rem" }}>Sort by:</label>
+										<select 
+											value={sortBy} 
+											onChange={(e) => setSortBy(e.target.value as "unitName" | "windowStart" | "vacantDays")}
+											style={{ padding: "0.5rem", borderRadius: "6px", background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.2)", color: "inherit", cursor: "pointer" }}
+										>
+											<option value="unitName">Unit Name (A-Z)</option>
+											<option value="windowStart">Window Start Date</option>
+											<option value="vacantDays">Vacant Days (High to Low)</option>
+										</select>
+									</div>
+								)}
 							</div>
 							<button onClick={handlePrint} className="print-button">
 								🖨️ Print Results
 							</button>
 						</div>
 
-						<div className="summary-grid">
-							<div className="summary-card">
-								<span>Vacancy Windows</span>
-								<strong>{analysis.vacancyCount}</strong>
-							</div>
-							<div className="summary-card">
-								<span>Active Work Orders Parsed</span>
-								<strong>{analysis.workOrderCount}</strong>
-							</div>
-							<div className="summary-card">
-								<span>Windows With No Match</span>
-								<strong>{rowsWithoutMatch}</strong>
-							</div>
-						</div>
+						{viewMode === "table" ? (
+							<>
+								<div className="summary-grid">
+									<div className="summary-card">
+										<span>Vacancy Windows</span>
+										<strong>{analysis.vacancyCount}</strong>
+									</div>
+									<div className="summary-card">
+										<span>Active Work Orders Parsed</span>
+										<strong>{analysis.workOrderCount}</strong>
+									</div>
+									<div className="summary-card">
+										<span>Windows With No Match</span>
+										<strong>{rowsWithoutMatch}</strong>
+									</div>
+								</div>
 
-						<div className="table-wrap">
-							<table>
-								<thead>
-									<tr>
-										<th>Unit Name</th>
-										<th>Window Start</th>
-										<th>Window End</th>
-									<th>Vacant Days</th>
-									<th>Work Orders</th>
-								</tr>
-							</thead>
-							<tbody>
-								{sortedResults.map((row, index) => (
-									<tr key={`${row.unitName}-${index}`}>
-										<td>{row.unitName}</td>
-										<td>{row.windowStart}</td>
-										<td>{row.windowEnd}</td>
-										<td>{row.vacantDays}</td>
-											<td>{row.matchedOrders}</td>
+								<div className="table-wrap">
+									<table>
+										<thead>
+											<tr>
+												<th>Unit Name</th>
+												<th>Window Start</th>
+												<th>Window End</th>
+											<th>Vacant Days</th>
+											<th>Work Orders</th>
 										</tr>
-									))}
-								</tbody>
-							</table>
-						</div>
+									</thead>
+									<tbody>
+										{sortedResults.map((row, index) => (
+											<tr key={`${row.unitName}-${index}`}>
+												<td>{row.unitName}</td>
+												<td>{row.windowStart}</td>
+												<td>{row.windowEnd}</td>
+												<td>{row.vacantDays}</td>
+													<td>{row.matchedOrders}</td>
+												</tr>
+											))}
+										</tbody>
+									</table>
+								</div>
+							</>
+						) : (
+							<CalendarView 
+								vacancyRows={vacancyRows} 
+								workOrderRows={workOrderRows}
+							/>
+						)}
 					</section>
 				) : null}
 			</div>
