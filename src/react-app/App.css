@@ -368,9 +368,9 @@ tr:nth-child(even) td {
 	padding: 4px 2px;
 	border-bottom: 2px solid rgba(96, 165, 250, 0.3);
 	font-size: 0.65rem;
-	width: 26px;
-	min-width: 26px;
-	max-width: 26px;
+	width: 42px;
+	min-width: 42px;
+	max-width: 42px;
 	white-space: nowrap;
 	text-align: center;
 }
@@ -398,9 +398,9 @@ tr:nth-child(even) td {
 	border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 	border-right: 1px solid rgba(255, 255, 255, 0.03);
 	text-align: center;
-	width: 26px;
-	min-width: 26px;
-	max-width: 26px;
+	width: 42px;
+	min-width: 42px;
+	max-width: 42px;
 	height: 30px;
 	position: relative;
 	vertical-align: middle;
@@ -436,8 +436,6 @@ tr:nth-child(even) td {
 	font-weight: 600;
 	white-space: nowrap;
 	margin: 1px 0;
-	overflow: hidden;
-	text-overflow: ellipsis;
 }
 
 .view-button {
@@ -513,17 +511,17 @@ tr:nth-child(even) td {
 
 	.unit-header,
 	.unit-cell {
-		min-width: 60px;
-		max-width: 60px;
-		padding: 3px 6px;
-		font-size: 0.65rem;
+		min-width: 40px;
+		max-width: 40px;
+		padding: 2px 4px;
+		font-size: 0.55rem;
 	}
 
 	.date-header,
 	.calendar-cell {
-		width: 22px;
-		min-width: 22px;
-		max-width: 22px;
+		width: 38px;
+		min-width: 38px;
+		max-width: 38px;
 		padding: 2px 1px;
 	}
 
